@@ -151,21 +151,47 @@ def processRequest(req):
 # This is called when status has to be shared with the customer for a specific ticket number. 
 
     elif intent == "phone_number - option2 - next ticket - ticketid":
+        phone_number = parameters["phone_number"]
         ticket_number=int(parameters["number"])
         url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         try:
-            response = requests.post(url,data={"ticket_id":ticket_number})
+            response = requests.post(url,data={"ticket_id":ticket_number,"phone_mobile":phone_number})
         except Exception as e:
             print(e)
             if e == "Expecting Value: line 1 column 1 (char 0)":
                 print("number doed not exist")                        
         response_Json = response.json()
+        message=response_Json["message"]
         status = response_Json["status"]
-        webhooktext = "Status is as mentioned below"
-        webhooktext1 = status
-        webhooktext2 = "Status is: " + webhooktext1
+
+        if message=="Ticket does not exist":
+            webhooktext = "Ticket does not exist." 
+            webhooktext1 = "Please share the correct ticket number. " 
+            return {
+             "fulfillmentMessages": [
+                {
+                    "text": {
+                        "text": [
+                            webhooktext
+                        ]
+
+                    }
+                },
+                {
+                    "text": {
+                        "text": [
+                            webhooktext1
+                        ]
+                    }
+                }
+            ]
+        }
+        elif message== "SUCCESS":
+            webhooktext = "Status is as mentioned below"
+            webhooktext1 = status
+            webhooktext2 = "Status is: " + webhooktext1
         
-        return {
+            return {
             "fulfillmentMessages": [
                 {
                     "text": {
@@ -188,8 +214,6 @@ def processRequest(req):
         ],            
         }      
     
-
-
 # This is called from option - when issue detail is entered and time for customer support is to be shared with CRM. 
 
     elif intent == "phone_number - option1 - issuedetail - customer_support":
@@ -202,7 +226,7 @@ def processRequest(req):
                   "title": webhooktext1,
                   "quickReplies": [
                     "9am - 12pm",
-                    "12pm - 3pm",
+                    "12pm - 3pm",    
                     "3pm - 6pm"
                   ]
                 },
