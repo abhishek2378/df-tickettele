@@ -34,7 +34,7 @@ def webhook():
     res = json.dumps(res, indent=4)
 #    print(res)
     r=make_response(res)
-    r.headers['Conten_type'] = 'application/json' 
+    r.headers['Content_type'] = 'application/json' 
     return r
 
 # processing the request from dialogflow - Based on intent different values are  returned 
