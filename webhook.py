@@ -185,21 +185,30 @@ def processRequest(req):
     elif intent == "phone_number - option2 - next ticket - ticketid":
         phone_number = parameters["phone_number"]
         ticket_number=int(parameters["number"])
-        url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
+        print(phone_number)
+        print(ticket_number)
+        # url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
         payload = json.dumps({"ticket_id":ticket_number,"phone_mobile":phone_number})
+        conn = http.client.HTTPConnection("cloudpenguincrm.com")
         try:
+            print("************I am in here*************")
             conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
             # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"ticket_id":ticket_number,"phone_mobile":phone_number})
+            print("i am here now")
             res = conn.getresponse()
+
         except Exception as e:
             print(e)
             if e == "Expecting Value: line 1 column 1 (char 0)":
                 print("number doed not exist")                        
+        
+        print("************I am in now here*************")
         data = res.read()
         newdata = data.decode("utf-8")
         n=json.loads(newdata)
         message = n["message"]
+        print("**** check check "+message)
         status = n["status"]
         # response_Json = response.json()
         # message=response_Json["message"]
@@ -535,6 +544,8 @@ def processRequest(req):
             ]
         }
 
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
 if __name__ == '__main__':
    port=int(os.getenv('PORT',5000))
