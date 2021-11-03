@@ -10,6 +10,7 @@ import requests
 import os
 import json
 from requests.auth import HTTPBasicAuth
+import http.client
 
 ### mongodb+srv://abhishek:chandan@cluster0.akxed.mongodb.net/testdialog?retryWrites=true&w=majority
 
@@ -51,21 +52,36 @@ def processRequest(req):
 #        collection = db.phonename 
         url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         phone_number = parameters["phone_number"]
+        conn = http.client.HTTPConnection("cloudpenguincrm.com")
+        payload = json.dumps({"phone_mobile": phone_number})
+
 # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number})                 
                      
-        headers  = {"apikey":"123456"}
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number})
+            # response = requests.request("POST","http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data=payload)
+            # print(response.text)
         except Exception as e:
             print(e)
             if e == "Expecting Value: line 1 column 1 (char 0)":
-                print("number doed not exist")        
+                print("number does not exist")        
         try:
-            response_Json = response.json()
-            message = response_Json["message"]
+            res = conn.getresponse()
+            data = res.read()
+            newdata = data.decode("utf-8")
+            n=json.loads(newdata)
+            print(n['message'])
+            message = n["message"]
+
+            # response_Json = response.json()
+            # print("*******************"+response_json+" is this response here")
+            # message = response_Json["message"]
+            print("message")
+
         except Exception as e:
             print(e)                    
-
 
 # If customer is not found then it sends back the message that you are not autorized. It asks to share registered number. 
 
@@ -94,7 +110,7 @@ def processRequest(req):
 
 # if Customer is found with that number, it gives quick replies and ask for selecting one of them.         
         elif message == "SUCCESS":
-            name=response_Json["Customer Name"]
+            name=n["Customer Name"]
             webhooktext = "Dear "+ name + " ,please select the option from below"
             return {
             "fulfillmentMessages": [
@@ -121,18 +137,30 @@ def processRequest(req):
         phone = parameters["phone_number"]
         query_text = result.get("queryText")
         parameters = result.get("parameters")
-        url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
-        phone_number = parameters["phone_number"]
-        headers  = {"apikey":"123456"}
+        # url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
+
+        conn = http.client.HTTPConnection("cloudpenguincrm.com")
+        payload = json.dumps({"phone_mobile":phone, "description":query_text})
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
+
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "description":query_text})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+            res = conn.getresponse()
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "description":query_text})
         except Exception as e:
             print(e)
             if e == "Expecting Value: line 1 column 1 (char 0)":
                 print("number doed not exist")        
         try:
-            response_Json = response.json()
-            newcount = response_Json["Ticket ID"]   
+            data = res.read()
+            newdata = data.decode("utf-8")
+            n=json.loads(newdata)
+            newcount = n["Ticket ID"]   
+
+            # response_Json = response.json()
+            # newcount = response_Json["Ticket ID"]   
+
+
         except Exception as e:
             print(e)
         webhooktext = str(newcount) 
@@ -158,16 +186,24 @@ def processRequest(req):
         phone_number = parameters["phone_number"]
         ticket_number=int(parameters["number"])
         url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
-        headers  = {"apikey":"123456"}
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
+        payload = json.dumps({"ticket_id":ticket_number,"phone_mobile":phone_number})
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"ticket_id":ticket_number,"phone_mobile":phone_number})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"ticket_id":ticket_number,"phone_mobile":phone_number})
+            res = conn.getresponse()
         except Exception as e:
             print(e)
             if e == "Expecting Value: line 1 column 1 (char 0)":
                 print("number doed not exist")                        
-        response_Json = response.json()
-        message=response_Json["message"]
-        status = response_Json["status"]
+        data = res.read()
+        newdata = data.decode("utf-8")
+        n=json.loads(newdata)
+        message = n["message"]
+        status = n["status"]
+        # response_Json = response.json()
+        # message=response_Json["message"]
+        # status = response_Json["status"]
 
         if message=="Ticket does not exist":
             webhooktext = "Ticket does not exist." 
@@ -246,11 +282,16 @@ def processRequest(req):
         query_text = result.get("queryText")
         url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         phone_number = parameters["phone_number"]
-        headers  = {"apikey":"123456"}
+        conn = http.client.HTTPConnection("cloudpenguincrm.com")
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
+        payload = json.dumps({"phone_mobile":phone_number, "followup_time":query_text})
+
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "followup_time":query_text})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "followup_time":query_text})
         except Exception as e:
             print(e)
+
         webhooktext = "Thank you for the response. We will pass on your details to customer executive"
         webhooktext1 = "They will contact you at your preferred time. This session is closed now. Have a good day."
         return {
@@ -345,17 +386,28 @@ def processRequest(req):
     elif intent == "phone_number - custom-option2":
         url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         phone_number = parameters["phone_number"]
-        headers  = {"apikey":"123456"}
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
+        payload = json.dumps({"phone_mobile":phone_number})
+        conn = http.client.HTTPConnection("cloudpenguincrm.com")
+
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number})
+            res = conn.getresponse()
         except Exception as e:
             print(e)
             if e == "Expecting Value: line 1 column 1 (char 0)":
                 print("number doed not exist")        
         try:
-            response_Json = response.json()
-            ticketid = response_Json["Ticket ID"]
-            status = response_Json["status"]
+            data = res.read()   
+            newdata = data.decode("utf-8")
+            n=json.loads(newdata)
+            ticketid = n["Ticket ID"]
+            status = n["status"]
+
+            # response_Json = response.json()
+            # ticketid = response_Json["Ticket ID"]
+            # status = response_Json["status"]
         except Exception as e:
             print(e)                    
         webhooktext = str(ticketid) 
@@ -395,11 +447,15 @@ def processRequest(req):
         }        
     elif intent == "phone_number - ticket status - not needed - customercare - time":
         query_text = result.get("queryText")
-        url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
+        # url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         phone_number = parameters["phone_number"]
-        headers  = {"apikey":"123456"}
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
+        payload = json.dumps({"phone_mobile":phone_number, "followup_time":query_text})
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "followup_time":query_text})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "followup_time":query_text})
+
         except Exception as e:
             print(e)
         webhooktext = "Thank you for the response. we will pass on your details to customer executive"
@@ -448,9 +504,12 @@ def processRequest(req):
         query_text = result.get("queryText")
         url = "http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json"
         phone_number = parameters["phone_number"]
-        headers  = {"apikey":"123456"}
+        headers  = {"apikey":"123456","Content-Type": "application/json",'Authorization': 'Basic YWRtaW46MTIzNA=='}
+        payload = json.dumps({"phone_mobile":phone_number, "followup_time":query_text})
         try:
-            response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "followup_time":query_text})
+            conn.request("POST", "/poncloud_services/api/v1?module=Generate_tickets&format=json", payload, headers)
+            # response = requests.post("http://cloudpenguincrm.com/poncloud_services/api/v1?module=Generate_tickets&format=json",headers=headers,auth=("admin","1234"),data={"phone_mobile":phone_number, "followup_time":query_text})
+
         except Exception as e:
             print(e)
         webhooktext = "Thank you for the response. we will pass on your details to customer executive"
@@ -475,6 +534,7 @@ def processRequest(req):
                 }
             ]
         }
+
 
 if __name__ == '__main__':
    port=int(os.getenv('PORT',5000))
